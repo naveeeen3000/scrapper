@@ -1,27 +1,47 @@
+from gc import collect
 import json
-from tkinter.messagebox import YES
+from turtle import update
 from bs4 import BeautifulSoup as bs
 import requests
-from sympy import false
 from utils import get_connection
 
 
 
 
-def get_page_urls():
+def scrapper():
     pages=767
     # href=[]
     base_url='http://mangapanda.in/popular-manga?page='
     for i in range(1,pages+1):
-        print('\n on page {} \n'.format(i))    
+        print('\n on page {} \n'.format(i))
         url=base_url+str(i)
         page=requests.get(url)
         soap=bs(page.content,'html.parser')
         div=soap.find_all(class_='cate-manga')[0]
         div2=div.find_all(class_='col-md-6')
         for d in div2:
-            magna_details(d.a.attrs['href'])
-    # print(href)
+            manga_href=d.a.attrs['href']
+            manga=magna_details(manga_href)
+            if not manga:
+                break
+            if update_db(manga):
+                print('db updated...')
+
+
+
+def update_db(manga):
+    print('updating {} to db....'.format(manga['title']))
+    coll=get_connection('manga')
+    if not coll['status']:
+        return {"status":coll['data']}
+    coll=coll['data']
+    try:
+        updated_chapter_list={'$set':{'chapters':manga['chapters']}}
+        res=coll.update_one({'title':manga['title']},updated_chapter_list)
+        print('updated to db.......')
+        return True
+    except:
+        return False
 
 
 def magna_details(url):
@@ -43,7 +63,6 @@ def magna_details(url):
     genre=info_div.find_all('div')[1].p.find_all('a')
     genre=[ g.contents[0] for g in genre[:-2] ]
     status=contents[-7]
-
     manga_details['title']=title
     manga_details['alternative']=alternative
     manga_details['author']=author
@@ -52,49 +71,37 @@ def magna_details(url):
 
     chapter_list_div=soap.find_all(class_='chapter-list')[1]
     lis=chapter_list_div.ul.find_all('li')
-    # print(lis[0].div.h4.a)
-    print(manga_details)
-    
-    chapters=[ {li.div.h4.a.contents[0] : download_images(li.div.h4.a.attrs['href'])} for li in lis]
+    chapters=[]
     for li in lis:
         href=li.div.h4.a.attrs['href']
-        if not download_images(href):
-            break
+        chapter_image_list=download_images(href)
+        if not chapter_image_list:
+            return False
+        chapters.append({li.div.h4.a.contents[0]:chapter_image_list})
     manga_details['chapters']=chapters
-    write_to_db(manga_details)
-    # write_to_json(manga_details)
-    print('process completed.........')
+    return manga_details
 
 
 def download_images(url="http://mangapanda.in/attack-on-titan-chapter-139.5"):
-    chapter_list=[]
+    # chapter_list=[]
     try:
-        if 'manganatos' in url:
-            Manganato_download_images(url)
         page=requests.get(url)
-        print('downloading chapter....')
         soap=bs(page.content,'html.parser')
         if 'manganatos' in page.url:
+            print('downloading chapter....')
             return Manganato_download_images(soap)
         else:
             return False
-        # print(soap)
-        selector_div=soap.find_all(class_='chapter-content-inner text-center image-auto')[0]
-        p=selector_div.p.contents[0]
-        chapter_list=p.split(",")
     except:
         chapter_list=['chapter doesn\'t exist']
     return chapter_list
     
-    
-
 def Manganato_download_images(soap):
     chapter_list=[]
     try:
         p=soap.find_all(id='arraydata')[0].contents[0]
-        # print(p)
         chapter_list=p.split(',')
-        print(chapter_list)
+        # print(chapter_list)
         return chapter_list
     except:
         chapter_list=["chapter doesn\'t exist"]
@@ -114,6 +121,7 @@ def write_to_db(manga):
 
     
 
-# get_page_urls()
-print(download_images())
-# magna_details()
+bleach=magna_details(url='http://mangapanda.in/manga/attack-on-titan')
+print(bleach)
+if update_db(bleach):
+    print('yessss')
