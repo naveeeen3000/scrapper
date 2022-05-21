@@ -1,16 +1,12 @@
 import json
 from bs4 import BeautifulSoup as bs
 import requests
-from utils import get_connection
 from mongo_operations import extra_info
+from pymongo import MongoClient
 
-collection=get_connection('manga')
 
-if not collection['status']:
-    print(collection['data'])
-    exit()
-
-collection=collection['data']
+client=MongoClient('mongodb+srv://naveen:leomessi10@cluster0.eobif.mongodb.net/myFirstDatabase?retryWrites=true&w=majority')
+collection=client['anime_accounts']['manga']
 
 def scrapper():
     pages=767
