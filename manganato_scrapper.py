@@ -30,7 +30,7 @@ def scrapper():
 
 
 def update_db(manga):
-    print('updating {} to db....'.format(manga['title']))
+    print('updating {} to db....'.format(str(manga['title'])))
     coll=get_connection('manga')
     if not coll['status']:
         return {"status":coll['data']}
@@ -61,7 +61,7 @@ def magna_details(url):
     alternative=contents[2]
     author=contents[10]
     genre=info_div.find_all('div')[1].p.find_all('a')
-    genre=[ g.contents[0] for g in genre[:-2] ]
+    genre=[ g.contents[0].strip(' ') for g in genre[:-2] ]
     status=contents[-7]
     manga_details['title']=title
     manga_details['alternative']=alternative
