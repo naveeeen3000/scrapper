@@ -2,10 +2,9 @@ from utils import get_connection
 import requests
 
 collection=get_connection("manga")['data']
-# print(collection)
+
 res=collection.find({},{'_id':0,'chapters':0})
 
-# print(list(res))
 
 for manga in res:
     title=manga['title']
