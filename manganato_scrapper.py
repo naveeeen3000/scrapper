@@ -4,6 +4,13 @@ import requests
 from utils import get_connection
 from mongo_operations import extra_info
 
+collection=get_connection('manga')
+
+if not collection['status']:
+    print(collection['data'])
+    exit()
+
+collection=collection['data']
 
 def scrapper():
     pages=767
@@ -50,8 +57,7 @@ def magna_details(url):
     genre=[ g.contents[0].strip(' ') for g in genre[:-2] ]
     status=contents[-7]
     title=title.split('Manga')[0]
-    coll=get_connection('manga')['data']
-    check=list(coll.find_one({'title':title}))
+    check=list(collection.find_one({'title':title}))
     if len(check)!=0:
         manga_exists=True
     manga_details['title']=title
@@ -138,27 +144,17 @@ def download_mangapanda_images(url):
 
 def update_db(manga):
     print('updating {} to db....'.format(str(manga['title'])))
-    coll=get_connection('manga')
-    if not coll['status']:
-        return {"status":coll['data']}
-    coll=coll['data']
     try:
         updated_chapter_list={'$set':{'chapters':manga['chapters']}}
-        res=coll.update_one({'title':manga['title']},updated_chapter_list)
+        res=collection.update_one({'title':manga['title']},updated_chapter_list)
         return True
     except:
         return False
 
 
 def write_to_db(manga):
-    
-    coll=get_connection('manga')
-    if not coll['status']:
-        return {"status":coll['data']}
-    coll=coll['data']
-    
     try:
-        res=coll.insert_one(manga)
+        res=collection.insert_one(manga)
         if res.acknowledged:
             print(manga['title']+'inserted to db./////')
     except:
