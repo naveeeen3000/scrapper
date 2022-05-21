@@ -3,7 +3,7 @@ import requests
 
 collection=get_connection("manga")['data']
 # print(collection)
-res=collection.find({},{'_id':0,'chapters':0}).limit(3)
+res=collection.find({},{'_id':0,'chapters':0})
 
 # print(list(res))
 
