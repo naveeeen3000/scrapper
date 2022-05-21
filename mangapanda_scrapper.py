@@ -66,7 +66,7 @@ def magna_details(url):
     print('process completed.........')
 
 
-def download_images(url="http://mangapanda.in/attack-on-titan-chapter-139.5"):
+def download_mangapanda_images(url):
     chapter_list=[]
     try:
         if 'manganatos' in url:
@@ -74,10 +74,6 @@ def download_images(url="http://mangapanda.in/attack-on-titan-chapter-139.5"):
         page=requests.get(url)
         print('downloading chapter....')
         soap=bs(page.content,'html.parser')
-        if 'manganatos' in page.url:
-            return Manganato_download_images(soap)
-        else:
-            return False
         # print(soap)
         selector_div=soap.find_all(class_='chapter-content-inner text-center image-auto')[0]
         p=selector_div.p.contents[0]
